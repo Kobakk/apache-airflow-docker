@@ -25,8 +25,8 @@ with DAG(
     dag_id = 'primer_pipeline',
     default_args=default_args,
     start_date=datetime(2026, 1, 16, 10, 0), # Hoy
-    schedule_interval='0 * * * *',  # 6AM, 12PM, 6PM, 10PM
-    catchup = True, # No correr fechas pasadas
+    schedule_interval= None,  # 6AM, 12PM, 6PM, 10PM
+    catchup = False, # No correr fechas pasadas
     tags=['creacion_dag_basico']
 ) as dag:
 
