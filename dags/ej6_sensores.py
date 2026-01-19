@@ -4,6 +4,8 @@ from airflow.sensors.filesystem import FileSensor
 from datetime import datetime, timedelta
 import os
 
+os.environ["AIRFLOW_CONN_FS_DEFAULT"] = "fs://"
+
 default_args = {
     'retries': 1,
     'retry_delay': timedelta(minutes=2)
@@ -15,9 +17,11 @@ def tarea_post_sensor(**kwargs):
     print("pipeline procesada")
 
 def crear_archivo_manual():
+    ruta = '/tmp/archivo.txt'
     with open('/tmp/archivo.txt', 'w') as f:
         f.write("Datos listos para procesar")
-    print("Fichero creado para pruebas")
+    ruta_completa = os.path.abspath(ruta)
+    print(f"Fichero creado para pruebas {ruta}")
 
 with DAG(
     dag_id='sensor_prueba',
@@ -31,14 +35,14 @@ with DAG(
     # SENSOR: Espera fichero externo (poke cada 10s, timeout 5min)
     sensor = FileSensor(
         task_id='esperar_fichero',
-        filepath='/tmp/archivo_esperado.txt',
+        filepath='/tmp/archivo.txt',
+        fs_conn_id='fs_default',
         
         # POKE MODE (ocupa worker)
         poke_interval=10,      # Chequea cada 10 segundos
         timeout=300,           # Falla tras 5 minutos
-        mode='poke',           # Ocupa slot del worker
-        
-        soft_fail=False
+        mode='poke',
+        soft_fail=False           
     )
     
     # Tarea normal DESPUÉS del sensor
@@ -52,4 +56,4 @@ with DAG(
         python_callable=crear_archivo_manual
     )
     
-    crear_prueba >> sensor >> procesar
+    sensor >> procesar
